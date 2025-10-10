@@ -44,8 +44,9 @@ export default function Page() {
 
       // Fetch availability
       const { data: availabilityData } = await supabase
-          .from<AvailabilityRow>("availability")
+          .from<AvailabilityRow, AvailabilityRow>("availability")
           .select("*")
+
       const availabilityMap = new Map<string, boolean>()
       availabilityData?.forEach((row) => availabilityMap.set(row.person_id, !!row.available))
 
