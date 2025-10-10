@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
+import { dark } from "@clerk/themes"
 import {
     ClerkProvider,
     SignedIn,
@@ -37,7 +38,7 @@ export default function RootLayout({
 
     return (
         <ClerkProvider publishableKey={clerkKey} // Ensure NEXT_PUBLIC_ key is used
-                       appearance={{ baseTheme: "dark" }}>
+                       appearance={{ baseTheme: dark }}>
             <html lang="en" className="dark">
             <body className={`font-sans ${inter.variable} ${GeistMono.variable}`}>
             {/* Header */}
