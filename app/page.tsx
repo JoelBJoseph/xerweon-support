@@ -1,4 +1,3 @@
-// app/page.tsx
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
@@ -14,13 +13,13 @@ type Person = {
   email?: string
   phone?: string
   available: boolean
+  availableAt?: string | null
 }
 
 export default function Page() {
   const [people, setPeople] = useState<Person[]>([])
   const { user } = useUser()
 
-  // Determine current logged-in user
   const matchedIndex = useMemo(() => {
     if (!user) return -1
     const email = user?.primaryEmailAddress?.emailAddress?.toLowerCase()
@@ -32,36 +31,33 @@ export default function Page() {
     )
   }, [user, people])
 
-  // Load people + availability from Supabase
+  // Load data
   useEffect(() => {
     let active = true
     const loadPeople = async () => {
-      // Fetch listed people
-      const { data: peopleData, error: peopleError } = await supabase
-          .from("listed_people")
-          .select("*")
-      if (peopleError || !peopleData) return
+      const { data: peopleData } = await supabase.from("listed_people").select("*")
+      const { data: availabilityData } = await supabase.from("availability").select("*")
 
-      // Fetch availability
-      const { data: availabilityData } = await supabase
-          .from("availability") // <- no generic here
-          .select("*")
-
-      const availabilityMap = new Map<string, boolean>()
+      const availabilityMap = new Map<string, { available: boolean; available_at: string | null }>()
       availabilityData?.forEach((row: any) =>
-          availabilityMap.set(row.person_id, !!row.available)
+          availabilityMap.set(row.person_id, {
+            available: !!row.available,
+            available_at: row.available_at || null,
+          })
       )
 
       if (!active) return
-      const mappedPeople: Person[] = peopleData.map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        role: p.role,
-        email: p.email,
-        phone: p.phone,
-        available: availabilityMap.get(p.id) ?? false,
-      }))
-      setPeople(mappedPeople)
+      setPeople(
+          peopleData?.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            role: p.role,
+            email: p.email,
+            phone: p.phone,
+            available: availabilityMap.get(p.id)?.available ?? false,
+            availableAt: availabilityMap.get(p.id)?.available_at ?? null,
+          })) || []
+      )
     }
 
     loadPeople()
@@ -70,7 +66,7 @@ export default function Page() {
     }
   }, [])
 
-  // Realtime availability updates
+  // Realtime updates
   useEffect(() => {
     const channel = supabase
         .channel("availability-updates")
@@ -82,7 +78,9 @@ export default function Page() {
               if (!newData?.person_id) return
               setPeople((prev) =>
                   prev.map((p) =>
-                      p.id === newData.person_id ? { ...p, available: newData.available } : p
+                      p.id === newData.person_id
+                          ? { ...p, available: newData.available, availableAt: newData.available_at }
+                          : p
                   )
               )
             }
@@ -94,49 +92,82 @@ export default function Page() {
     }
   }, [])
 
-  // Toggle availability for logged-in user
+  // Toggle availability
   const toggleAvailability = async (idx: number) => {
     if (idx !== matchedIndex) return
+    const person = people[idx]
+    const newAvailability = !person.available
+
     setPeople((prev) => {
       const next = [...prev]
-      next[idx] = { ...next[idx], available: !next[idx].available }
+      next[idx] = { ...next[idx], available: newAvailability }
       return next
     })
-    const person = people[idx]
+
     await supabase
         .from("availability")
-        .upsert({ person_id: person.id, available: !person.available })
+        .upsert({ person_id: person.id, available: newAvailability })
+  }
+
+  // Set "available at"
+  const setAvailableAt = async (idx: number) => {
+    if (idx !== matchedIndex) return
+    const person = people[idx]
+
+    const time = prompt("Enter when you'll be available (e.g., 2025-10-10 17:00 or 30min)")
+    if (!time) return
+
+    let timestamp: string
+    if (time.includes(":")) {
+      timestamp = new Date(time).toISOString()
+    } else if (time.toLowerCase().includes("min")) {
+      const mins = parseInt(time)
+      const date = new Date(Date.now() + mins * 60 * 1000)
+      timestamp = date.toISOString()
+    } else {
+      timestamp = new Date().toISOString()
+    }
+
+    setPeople((prev) => {
+      const next = [...prev]
+      next[idx] = { ...next[idx], availableAt: timestamp }
+      return next
+    })
+
+    await supabase
+        .from("availability")
+        .upsert({ person_id: person.id, available_at: timestamp })
   }
 
   return (
-      <main className="min-h-dvh">
+      <main className="min-h-dvh bg-black text-white">
         <div className="mx-auto max-w-6xl px-4 py-8">
-          {/* Header */}
           <header className="mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Logo />
-                <span className="text-muted-foreground">- Customer Support</span>
+                <span className="text-cyan-400">- Customer Support</span>
               </div>
             </div>
-            <div className="border-b border-primary/50 mt-3" />
+            <div className="border-b border-cyan-500/40 mt-3" />
           </header>
 
-          {/* Not-in-directory notice */}
           {user && matchedIndex < 0 && (
-              <div
-                  role="status"
-                  className="mb-6 rounded-lg border border-border bg-background/50 p-3 text-sm text-muted-foreground"
-              >
-                You’re signed in as “{user?.primaryEmailAddress?.emailAddress || user?.username || user?.id}”, but this
-                identity is not in the directory. You can view the list only.
+              <div className="mb-6 rounded-lg border border-cyan-500/30 bg-zinc-900/70 p-3 text-sm text-gray-400">
+                You’re signed in as “{user?.primaryEmailAddress?.emailAddress || user?.username || user?.id}”,
+                but this identity is not in the directory. You can view the list only.
               </div>
           )}
 
-          {/* Grid of people */}
           <section aria-label="Staff directory" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {people.map((p, idx) => (
-                <StaffCard key={p.id} person={p} isSelf={idx === matchedIndex} onToggle={() => toggleAvailability(idx)} />
+                <StaffCard
+                    key={p.id}
+                    person={p}
+                    isSelf={idx === matchedIndex}
+                    onToggle={() => toggleAvailability(idx)}
+                    onSetAvailableAt={() => setAvailableAt(idx)}
+                />
             ))}
           </section>
         </div>

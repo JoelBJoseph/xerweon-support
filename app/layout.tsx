@@ -9,8 +9,8 @@ import {dark} from "@clerk/themes";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-    title: "Staff Directory",
-    description: "Staff availability dashboard",
+    title: "xerweon™ - Customer Support",
+    description: "Helping Customers Always!",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ClerkProvider publishableKey={clerkKey} appearance={dark}>
             <html lang="en" className="dark">
             <body className={`font-sans ${inter.variable} ${GeistMono.variable}`}>
-            <header className="p-4 flex items-center justify-end gap-2 border-b border-primary/50">
+            <header className="p-4 flex items-center justify-end gap-2 bg-transparent border-none">
                 <SignedOut>{/* no buttons here; login page handles it */}</SignedOut>
                 <SignedIn>
                     <UserButton />
@@ -31,5 +31,3 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </ClerkProvider>
     );
 }
-
-//just checking
