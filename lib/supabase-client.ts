@@ -15,7 +15,6 @@ export type ListedPerson = {
 }
 
 export type AvailabilityRow = {
-  id: string
   person_id: string
   available: boolean
   updated_at?: string

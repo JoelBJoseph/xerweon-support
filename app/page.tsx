@@ -44,11 +44,13 @@ export default function Page() {
 
       // Fetch availability
       const { data: availabilityData } = await supabase
-          .from<AvailabilityRow, AvailabilityRow>("availability")
+          .from("availability") // <- no generic here
           .select("*")
 
       const availabilityMap = new Map<string, boolean>()
-      availabilityData?.forEach((row) => availabilityMap.set(row.person_id, !!row.available))
+      availabilityData?.forEach((row: any) =>
+          availabilityMap.set(row.person_id, !!row.available)
+      )
 
       if (!active) return
       const mappedPeople: Person[] = peopleData.map((p: any) => ({
