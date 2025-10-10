@@ -49,11 +49,11 @@ export default function Page() {
         .on(
             "postgres_changes",
             { event: "*", schema: "public", table: "availability" },
-            (payload) => {
-              if (!payload.new?.person_id) return
+            (payload: { new: AvailabilityRow }) => {
+              const newData = payload.new
               setPeople((prev) =>
                   prev.map((p) =>
-                      p.id === payload.new.person_id ? { ...p, available: payload.new.available } : p
+                      p.id === newData.person_id ? { ...p, available: newData.available } : p
                   )
               )
             }
