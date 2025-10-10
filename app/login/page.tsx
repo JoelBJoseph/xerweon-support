@@ -1,17 +1,22 @@
 "use client"
 
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs"
+import { SignedIn, SignedOut, SignInButton, SignUpButton, useUser } from "@clerk/nextjs"
 
 export default function LoginPage() {
     const router = useRouter()
+    const { isSignedIn } = useUser()
+
+    // Redirect if already signed in
+    useEffect(() => {
+        if (isSignedIn) {
+            router.push("/")
+        }
+    }, [isSignedIn, router])
 
     return (
         <main className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
-            <SignedIn>
-                {router.push("/")} {/* Redirect if already signed in */}
-            </SignedIn>
-
             <SignedOut>
                 <h1 className="text-2xl mb-6">Login</h1>
                 <div className="flex gap-4">
