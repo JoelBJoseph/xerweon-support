@@ -29,6 +29,33 @@ export function StaffCard({
   const statusText = person.available ? "Available" : "Unavailable"
   const telHref = person.phone ? `tel:${person.phone.replace(/\D/g, "")}` : undefined
 
+  // Format "Available at" as DD/MM/YYYY HH:mm
+  const formatAvailableAt = (isoTime: string) => {
+    const date = new Date(isoTime)
+    const day = String(date.getDate()).padStart(2, "0")
+    const month = String(date.getMonth() + 1).padStart(2, "0")
+    const year = date.getFullYear()
+    const hours = String(date.getHours()).padStart(2, "0")
+    const minutes = String(date.getMinutes()).padStart(2, "0")
+    return `${day}/${month}/${year} ${hours}:${minutes}`
+  }
+
+  // Format relative time (Available in ...)
+  const formatRelativeTime = (isoTime: string) => {
+    const now = new Date()
+    const target = new Date(isoTime)
+    const diffMs = target.getTime() - now.getTime()
+    if (diffMs <= 0) return "now"
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+    const parts = []
+    if (days) parts.push(`${days}d`)
+    if (hours) parts.push(`${hours}h`)
+    if (minutes) parts.push(`${minutes}m`)
+    return parts.join(" ")
+  }
+
   return (
       <div
           className={cn(
@@ -131,12 +158,11 @@ export function StaffCard({
                 </Button>
             )}
 
+            {/* Available at */}
             {!person.available && person.availableAt && (
                 <p className="text-xs text-center text-gray-400 italic">
-                  Available at:{" "}
-                  <span className="text-cyan-400">
-                {new Date(person.availableAt).toLocaleString()}
-              </span>
+                  Available at: <span className="text-cyan-400">{formatAvailableAt(person.availableAt)}</span>{" "}
+                  (<span className="text-gray-300">{formatRelativeTime(person.availableAt)}</span>)
                 </p>
             )}
           </div>
