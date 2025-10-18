@@ -6,6 +6,7 @@ import { supabase, AvailabilityRow } from "@/lib/supabase-client"
 import { StaffCard } from "@/components/staff-card"
 import Logo from "@/components/logo"
 import { SetAvailableModal } from "@/components/set-available-modal"
+import { Button } from "@/components/ui/button"
 
 type Person = {
     id: string
@@ -132,8 +133,9 @@ export default function Page() {
     }
 
     return (
-        <main className="min-h-dvh bg-black text-white">
-            <div className="mx-auto max-w-6xl px-4 py-8">
+        <main className="min-h-screen bg-black text-white flex flex-col">
+            {/* Page Content */}
+            <div className="flex-grow mx-auto w-full max-w-6xl px-4 py-8">
                 <header className="mb-6">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -151,7 +153,10 @@ export default function Page() {
                     </div>
                 )}
 
-                <section aria-label="Staff directory" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <section
+                    aria-label="Staff directory"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
                     {people.map((p, idx) => (
                         <StaffCard
                             key={p.id}
@@ -163,6 +168,36 @@ export default function Page() {
                     ))}
                 </section>
             </div>
+
+            {/* Sticky Footer */}
+            <footer className="sticky bottom-0 w-full border-t border-cyan-500/20 py-4 bg-zinc-950">
+                <div className="flex justify-center gap-4">
+                    <Button
+                        asChild
+                        className="bg-cyan-500 hover:bg-cyan-400 text-black font-medium rounded-xl"
+                    >
+                        <a
+                            href="https://forms.gle/GLwzdmX2mxqMmrZU6"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            💬 Feedback Form
+                        </a>
+                    </Button>
+                    <Button
+                        asChild
+                        className="border border-cyan-500 text-white hover:bg-cyan-500/10 rounded-xl"
+                    >
+                        <a
+                            href="https://forms.gle/PBZs3Ngg6XQbTQL96"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            🐞 Bug Report
+                        </a>
+                    </Button>
+                </div>
+            </footer>
 
             <SetAvailableModal
                 open={modalOpen}
